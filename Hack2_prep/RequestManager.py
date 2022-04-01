@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from Authenticate import *
 import mongoengine as db
-
+from App_Upload import *
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Actor.db'
 database_name = 'requestmanager_db'
@@ -53,7 +53,7 @@ def protected(current_user):
 def upload_app(current_user):
     if current_user.role != 'app_developer':
         return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
-    return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
+    return jsonify(upload_app_file(request))
 
 @app.route('/data_scientist/upload_model',methods=['POST'])
 @token_required

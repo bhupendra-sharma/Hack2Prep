@@ -11,3 +11,14 @@ class Actor(db.Document):
             "password": self.password,
             "author":self.role
         }
+
+class applications(db.Document):
+    #appid = db.IntField(required=True)
+    appName = db.StringField(required=True,unique=True)
+    path = db.StringField(required=True)
+
+    def to_json(self):
+        return {
+            "appName": self.appName,
+            "path":self.path
+        }

@@ -29,7 +29,8 @@ def login(req):
     if actor == 0:
         return {'err_msg':'User not found'}
 
-    token = encode_auth_token(username,role)
+    token = encode_auth_token(username,role).decode('utf-8')
+    # token(token.decode('utf-8'))
     return {'token':token,'succ_msg':'Authentication Successfull','username':username}
 
 def encode_auth_token(username,role):
