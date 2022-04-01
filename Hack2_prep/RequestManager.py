@@ -23,7 +23,7 @@ def token_required(f):
         try:
             data = jwt.decode(token,app.config['SECRET_KEY'],algorithms=['HS256'])
             print( data['username'])
-            current_user = Actor.query.filter_by(username = data['username'], role = data['role'] ).first()
+            current_user = Actor.objects(username = data['username']).first()
         except:
             return jsonify({'message':'Token is invalid!!'}), 401
         return f(current_user, *args, **kwargs)
@@ -52,35 +52,35 @@ def protected(current_user):
 @token_required
 def upload_app(current_user):
     if current_user.role != 'app_developer':
-        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
     return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 @app.route('/data_scientist/upload_model',methods=['POST'])
 @token_required
 def upload_model(current_user):
-    if current_user.role != 'app_developer':
-        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    if current_user.role != 'data_scientist':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
     return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 @app.route('/end_user/use_app',methods=['POST'])
 @token_required
 def use_app(current_user):
-    if current_user.role != 'app_developer':
-        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    if current_user.role != 'end_user':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
     return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 @app.route('/platform_admin/upload_sensor',methods=['POST'])
 @token_required
 def upload_sensor(current_user):
-    if current_user.role != 'app_developer':
-        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    if current_user.role != 'platform_admin':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
     return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 @app.route('/platform_admin/add_node',methods=['POST'])
 @token_required
 def add_node(current_user):
-    if current_user.role != 'app_developer':
-        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    if current_user.role != 'platform_admin':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user.username, "user":current_user.username , "role":current_user.role}), 401    
     return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 if __name__ == '__main__':
