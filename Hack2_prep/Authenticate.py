@@ -10,10 +10,10 @@ def signup(req):
     username = req['username']
     password = req['password']
     role = req['role']
-    actor = Actor.objects(username = username,role = role).count()
+    actor = Actor.objects(username = username).count()
     print("Number of actors in actor db:",actor)
     if actor > 0:
-        return {'err_msg':'User with this role already exist'}
+        return {'err_msg':'User already exist'}
     actor = Actor(username = username , password = password , role = role)
     actor.save()
 
