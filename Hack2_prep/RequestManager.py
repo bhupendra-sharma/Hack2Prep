@@ -1,36 +1,67 @@
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from markupsafe import re
-import Authenticate
-import os
-app = Flask(__name__)
-# AUTHENTICATOR_IP= os.getenv("AUTHENTICATOR_IP")
-# AUTHENTICATOR_PORT= os.getenv("AUTHENTICATOR_PORT")
+from Authenticate import *
+import mongoengine as db
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Actor.db'
-db = SQLAlchemy(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Actor.db'
+database_name = 'requestmanager_db'
+DB_URI =  'mongodb+srv://kamal:kamal123@cluster0.lzygp.mongodb.net/{}?retryWrites=true&w=majority'.format(database_name)
+app.config['SECRET_KEY'] = 'root'
 
-class Actor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    role = db.Column(db.String(60), nullable=False)
+def token_required(f):
+    @wraps(f)
+    def decorated(*args,**kwargs):
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        
+        if  not token:
+            return jsonify({'message':'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token,app.config['SECRET_KEY'],algorithms=['HS256'])
+            print( data['username'])
+            current_user = Actor.query.filter_by(username = data['username'], role = data['role'] ).first()
+        except:
+            return jsonify({'message':'Token is invalid!!'}), 401
+        return f(current_user, *args, **kwargs)
+    return decorated
 
 
 
 @app.route('/')
-def hello():
+def home():
     return render_template('index.html')
 
+@app.route('/signup',methods=["POST"])
+def signup_req():
+    return jsonify(signup(request))
 
-@app.route('/signup/<role>',methods=["POST"])
-def signup(role):
-    return jsonify(Authenticate.signup(role,request,db,Actor))
+@app.route('/login',methods=["POST"])
+def login_req():
+    return jsonify(login(request))
 
-@app.route('/login/<role>',methods=["POST"])
-def login(role):
-    return jsonify(Authenticate.login(role,request,Actor))
+@app.route('/protected',methods=['POST'])
+@token_required
+def protected(current_user):
+    return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
+
+@app.route('/app_developer/upload_app',methods=['POST'])
+@token_required
+def upload_app(current_user):
+    if current_user.role != 'app_developer':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
+
+@app.route('/data_scientist/upload_model',methods=['POST'])
+@token_required
+def upload_model(current_user):
+    if current_user.role != 'app_developer':
+        return jsonify({"message":"Invalid Role("+current_user.role+") for user:"+current_user, "user":current_user.username , "role":current_user.role}), 401    
+    return jsonify({"message":"Able to access because token verified", "user":current_user.username , "role":current_user.role}), 200
 
 if __name__ == '__main__':
+    db.connect(host=DB_URI)
     app.run(debug=True)

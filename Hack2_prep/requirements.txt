@@ -1,0 +1,3 @@
+pip install mongoengine
+pip install pyjwt
+pip install dnspython
